@@ -52,7 +52,7 @@
  </div>
 
  <script>
- const SYSTEM_PROMPT = "Ты — умный, харизматичный и живой личный секретарь пользователя. Общайся на русском языке как настоящий человек: тепло, энергично, с лёгким юмором и без канцеляризмов. Помогай с задачами, идеями, текстами и планированием. Отвечай лаконично и по делу, как в живом мессенджере.";
+ const SYSTEM_PROMPT = "Ты — умный, харизматичный и живой личный секретарь пользователя. Общайся как настоящий человек: тепло, энергично, с лёгким юмором и без канцеляризмов. Помогай с задачами, идеями, текстами и планированием. Отвечай лаконично и по делу, как в живом мессенджере.";
  let messages = [{ role: "system", content: SYSTEM_PROMPT }];
  const chat = document.getElementById("chat");
 
@@ -91,29 +91,28 @@
  const loading = addMessage("Печатает...", "ai");
 
  try {
- const response = await fetch("https://pollinations.ai", {
+ const response = await fetch("/.netlify/functions/chat", {
  method: "POST",
  headers: { "Content-Type": "application/json" },
- body: JSON.stringify({
- model: "openai",
- messages: messages
- })
+ body: JSON.stringify({ messages: messages })
  });
 
  const rawText = await response.text();
- let reply = "";
+ let data;
  try {
- const data = JSON.parse(rawText);
- const choice = Array.isArray(data.choices) ? data.choices.at(0) : null;
- reply = (choice && choice.message && choice.message.content) ? choice.message.content : rawText;
+ data = JSON.parse(rawText);
  } catch (e) {
- reply = rawText;
+ loading.textContent = "Ответ сервера (" + response.status + "): " + rawText.slice(0, 140);
+ return;
  }
 
- if (!reply || !reply.trim()) reply = "Не удалось получить ответ, попробуй ещё раз.";
- loading.textContent = reply.trim();
- messages.push({ role: "assistant", content: reply.trim() });
- if (voiceText) speak(reply.trim());
+ const choice = Array.isArray(data.choices) ? data.choices.at(0) : null;
+ const reply = (choice && choice.message && choice.message.content)
+ ? choice.message.content
+ : (data.error ? JSON.stringify(data.error) : "Ответ без текста: " + rawText.slice(0, 140));
+ loading.textContent = reply;
+ messages.push({ role: "assistant", content: reply });
+ if (voiceText) speak(reply);
  } catch (err) {
  loading.textContent = "Ошибка сети: " + err.message;
  }
