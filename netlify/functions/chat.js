@@ -7,7 +7,8 @@ export default async (req) => {
  method: "POST",
  headers: {
  "Authorization": "Bearer " + token,
- "Content-Type": "application/json"
+ "Content-Type": "application/json",
+ "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
  },
  body: JSON.stringify({
  model: "Qwen/Qwen2.5-72B-Instruct",
